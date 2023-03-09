@@ -4,6 +4,7 @@ info:
   title: 'realmeet'
 servers:
   - url: 'http://localhost:3000'
+
 paths:
   /rooms/{id}:
     get:
@@ -20,7 +21,7 @@ paths:
             type: integer
             format: int64
       responses:
-        '200':
+        200:
           description: 'OK'
           content:
             application/json:
@@ -28,10 +29,25 @@ paths:
                 $ref: '#/components/schemas/RoomDTO'
         404:
           description: Not Found
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ResponseError'
+
+    delete:
+      summary: 'Deletes a room by ID'
+      operationId: deleteRoom
+      tags:
+        - room
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: ID of the room
+          schema:
+            type: integer
+            format: int64
+      responses:
+        204:
+          description: 'Deleted Successfuly'
+        404:
+          description: Not Found
 
   /rooms:
     post:
