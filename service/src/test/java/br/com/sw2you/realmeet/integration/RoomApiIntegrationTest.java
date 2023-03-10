@@ -6,6 +6,8 @@ import static br.com.sw2you.realmeet.utils.TestDataCreator.newRoomBuilder;
 import static org.junit.jupiter.api.Assertions.*;
 
 import br.com.sw2you.realmeet.api.facade.RoomApi;
+import br.com.sw2you.realmeet.api.model.CreateRoomDTO;
+import br.com.sw2you.realmeet.api.model.UpdateRoomDTO;
 import br.com.sw2you.realmeet.core.BaseIntegrationTest;
 import br.com.sw2you.realmeet.domain.repository.RoomRepository;
 import org.junit.jupiter.api.Test;
@@ -70,7 +72,7 @@ class RoomApiIntegrationTest extends BaseIntegrationTest {
     void testCreateRoomValidationError() {
         assertThrows(
             HttpClientErrorException.UnprocessableEntity.class,
-            () -> api.createRoom(newCreateRoomDTO().name(null))
+            () -> api.createRoom((CreateRoomDTO) newCreateRoomDTO().name(null))
         );
     }
 
@@ -84,5 +86,33 @@ class RoomApiIntegrationTest extends BaseIntegrationTest {
     @Test
     void testDeleteRoomDoesNotExist() {
         assertThrows(HttpClientErrorException.NotFound.class, () -> api.deleteRoom(1L));
+    }
+
+    @Test
+    void testUpdateRoomSuccess() {
+        var room = roomRepository.saveAndFlush(newRoomBuilder().build());
+        var updateRoomDTO = new UpdateRoomDTO().name(room.getName() + "_").seats(room.getSeats() + 1);
+
+        api.updateRoom(room.getId(), updateRoomDTO);
+
+        var updatedRoom = roomRepository.findById(room.getId()).orElseThrow();
+        assertEquals(updateRoomDTO.getName(), updatedRoom.getName());
+        assertEquals(updateRoomDTO.getSeats(), updatedRoom.getSeats());
+    }
+
+    @Test
+    void testUpdateRoomDoesNotExist() {
+        assertThrows(
+            HttpClientErrorException.NotFound.class,
+            () -> api.updateRoom(1L, new UpdateRoomDTO().name("Room").seats(10))
+        );
+    }
+
+    @Test
+    void testUpdateRoomValidationError() {
+        assertThrows(
+            HttpClientErrorException.UnprocessableEntity.class,
+            () -> api.updateRoom(1L, new UpdateRoomDTO().name(null).seats(10))
+        );
     }
 }
