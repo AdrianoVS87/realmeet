@@ -6,11 +6,9 @@ import static br.com.sw2you.realmeet.utils.TestDataCreator.*;
 import static org.junit.jupiter.api.Assertions.*;
 
 import br.com.sw2you.realmeet.api.facade.AllocationApi;
-import br.com.sw2you.realmeet.api.model.UpdateRoomDTO;
 import br.com.sw2you.realmeet.core.BaseIntegrationTest;
 import br.com.sw2you.realmeet.domain.repository.AllocationRepository;
 import br.com.sw2you.realmeet.domain.repository.RoomRepository;
-import br.com.sw2you.realmeet.utils.TestConstants;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.client.HttpClientErrorException;
@@ -34,7 +32,7 @@ class AllocationApiIntegrationTest extends BaseIntegrationTest {
     void testCreateAllocationSuccess() {
         var room = roomRepository.saveAndFlush(newRoomBuilder().build());
         var createAllocationDTO = newCreateAllocationDTO().roomId(room.getId());
-        var allocationDTO = api.createAllocation(createAllocationDTO);
+        var allocationDTO = api.createAllocation(TEST_CLIENT_API_KEY, createAllocationDTO);
 
         assertNotNull(allocationDTO.getId());
         assertEquals(room.getId(), allocationDTO.getRoomId());
@@ -52,13 +50,16 @@ class AllocationApiIntegrationTest extends BaseIntegrationTest {
 
         assertThrows(
             HttpClientErrorException.UnprocessableEntity.class,
-            () -> api.createAllocation(createAllocationDTO)
+            () -> api.createAllocation(TEST_CLIENT_API_KEY, createAllocationDTO)
         );
     }
 
     @Test
     void testCreateAllocationWhenRoomDoesNotExist() {
-        assertThrows(HttpClientErrorException.NotFound.class, () -> api.createAllocation(newCreateAllocationDTO()));
+        assertThrows(
+            HttpClientErrorException.NotFound.class,
+            () -> api.createAllocation(TEST_CLIENT_API_KEY, newCreateAllocationDTO())
+        );
     }
 
     @Test
@@ -66,7 +67,7 @@ class AllocationApiIntegrationTest extends BaseIntegrationTest {
         var room = roomRepository.saveAndFlush(newRoomBuilder().build());
         var allocation = allocationRepository.saveAndFlush(newAllocationBuilder(room).build());
 
-        api.deleteAllocation(allocation.getId());
+        api.deleteAllocation(TEST_CLIENT_API_KEY, allocation.getId());
         assertFalse(allocationRepository.findById(allocation.getId()).isPresent());
     }
 
@@ -79,27 +80,27 @@ class AllocationApiIntegrationTest extends BaseIntegrationTest {
 
         assertThrows(
             HttpClientErrorException.UnprocessableEntity.class,
-            () -> api.deleteAllocation(allocation.getId())
+            () -> api.deleteAllocation(TEST_CLIENT_API_KEY, allocation.getId())
         );
     }
 
     @Test
     void testDeleteAllocationDoesNotExist() {
-        assertThrows(HttpClientErrorException.NotFound.class, () -> api.deleteAllocation(1L));
+        assertThrows(HttpClientErrorException.NotFound.class, () -> api.deleteAllocation(TEST_CLIENT_API_KEY, 1L));
     }
 
     @Test
     void testUpdateAllocationSuccess() {
         var room = roomRepository.saveAndFlush(newRoomBuilder().build());
         var createAllocationDTO = newCreateAllocationDTO().roomId(room.getId());
-        var allocationDTO = api.createAllocation(createAllocationDTO);
+        var allocationDTO = api.createAllocation(TEST_CLIENT_API_KEY, createAllocationDTO);
 
         var updateAllocationDTO = newUpdateAllocationDTO()
             .subject(DEFAULT_ALLOCATION_SUBJECT + "_")
             .startAt(DEFAULT_ALLOCATION_START_AT.plusDays(1))
             .endAt(DEFAULT_ALLOCATION_END_AT.plusDays(1));
 
-        api.updateAllocation(allocationDTO.getId(), updateAllocationDTO);
+        api.updateAllocation(TEST_CLIENT_API_KEY, allocationDTO.getId(), updateAllocationDTO);
 
         var allocation = allocationRepository.findById(allocationDTO.getId()).orElseThrow();
 
@@ -110,18 +111,22 @@ class AllocationApiIntegrationTest extends BaseIntegrationTest {
 
     @Test
     void testUpdateAllocationDoesNotExist() {
-        assertThrows(HttpClientErrorException.NotFound.class, () -> api.updateAllocation(1L, newUpdateAllocationDTO()));
+        assertThrows(
+            HttpClientErrorException.NotFound.class,
+            () -> api.updateAllocation(TEST_CLIENT_API_KEY, 1L, newUpdateAllocationDTO())
+        );
     }
 
     @Test
     void testUpdateAllocationValidationError() {
         var room = roomRepository.saveAndFlush(newRoomBuilder().build());
         var createAllocationDTO = newCreateAllocationDTO().roomId(room.getId());
-        var allocationDTO = api.createAllocation(createAllocationDTO);
+        var allocationDTO = api.createAllocation(TEST_CLIENT_API_KEY, createAllocationDTO);
 
         assertThrows(
             HttpClientErrorException.UnprocessableEntity.class,
-            () -> api.updateAllocation(allocationDTO.getId(), newUpdateAllocationDTO().subject(null))
+            () ->
+                api.updateAllocation(TEST_CLIENT_API_KEY, allocationDTO.getId(), newUpdateAllocationDTO().subject(null))
         );
     }
 }

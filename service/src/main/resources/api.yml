@@ -13,6 +13,7 @@ paths:
       tags:
         - room
       parameters:
+        - $ref: '#/components/parameters/apiKey'
         - name: id
           in: path
           required: true
@@ -36,6 +37,7 @@ paths:
       tags:
         - room
       parameters:
+        - $ref: '#/components/parameters/apiKey'
         - name: id
           in: path
           required: true
@@ -55,6 +57,7 @@ paths:
       tags:
         - room
       parameters:
+        - $ref: '#/components/parameters/apiKey'
         - name: id
           in: path
           required: true
@@ -82,6 +85,8 @@ paths:
       operationId: createRoom
       tags:
         - room
+      parameters:
+        - $ref: '#/components/parameters/apiKey'
       requestBody:
         content:
           application/json:
@@ -99,11 +104,57 @@ paths:
           $ref: '#/components/responses/UnprocessableEntity'
 
   /allocations:
+    get:
+      summary: "Lists allocations"
+      operationId: listAllocations
+      tags:
+        - allocation
+      parameters:
+        - $ref: '#/components/parameters/apiKey'
+        - name: employeeEmail
+          in: query
+          description: Email of the employee
+          schema:
+            type: string
+        - name: roomId
+          in: query
+          description: Room ID
+          schema:
+            type: integer
+            format: int64
+        - name: startAt
+          in: query
+          description: Allocation start time
+          schema:
+            type: string
+            format: date
+        - name: endAt
+          in: query
+          description: Allocation end time
+          schema:
+            type: string
+            format: date
+        - $ref: '#/components/parameters/orderBy'
+        - $ref: '#/components/parameters/limit'
+        - $ref: '#/components/parameters/page'
+
+      responses:
+        200:
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/AllocationDTO'
+
     post:
       summary: 'Creates an allocation'
       operationId: createAllocation
       tags:
         - allocation
+      parameters:
+        - $ref: '#/components/parameters/apiKey'
       requestBody:
         content:
           application/json:
@@ -129,6 +180,7 @@ paths:
       tags:
         - allocation
       parameters:
+        - $ref: '#/components/parameters/apiKey'
         - name: id
           in: path
           required: true
@@ -150,6 +202,7 @@ paths:
       tags:
         - allocation
       parameters:
+        - $ref: '#/components/parameters/apiKey'
         - name: id
           in: path
           required: true
@@ -253,3 +306,33 @@ components:
             type: array
             items:
               $ref: '#/components/schemas/ResponseError'
+
+  parameters:
+    orderBy:
+      name: orderBy
+      in: query
+      description: Field to order by
+      schema:
+        type: string
+
+    limit:
+      name: limit
+      in: query
+      description: Maximum number of returned records
+      schema:
+        type: integer
+
+    page:
+      name: page
+      in: query
+      description: The page of records to fetch (0 index based)
+      schema:
+        type: integer
+
+    apiKey:
+      name: api-key
+      in: header
+      description: The API key to authenticate the request
+      required: true
+      schema:
+        type: string
